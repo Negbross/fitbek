@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+    /* Neutral / Background - based on #0F1219 */
+    --color-navy-50: #e8eaf6;
+    --color-navy-100: #c5cae9;
+    --color-navy-200: #9fa8da;
+    --color-navy-300: #7986cb;
+    --color-navy-400: #5c6bc0;
+    --color-navy-500: #3f51b5;
+    --color-navy-600: #303f7a;
+    --color-navy-700: #1a2344;
+    --color-navy-800: #141a2e;
+    --color-navy-900: #0F1219;
+    --color-navy-950: #0a0d12;
+
+    /* Primary - Indigo #3F51B5 */
+    --color-primary-300: #9fa8da;
+    --color-primary-400: #7986cb;
+    --color-primary-500: #3F51B5;
+    --color-primary-600: #3949ab;
+    --color-primary-700: #303f9f;
+
+    /* Secondary - Blue Grey #607D8B */
+    --color-secondary-300: #90a4ae;
+    --color-secondary-400: #78909c;
+    --color-secondary-500: #607D8B;
+    --color-secondary-600: #546e7a;
+    --color-secondary-700: #455a64;
+
+    /* Tertiary - Light Indigo #9FA8DA */
+    --color-tertiary-300: #c5cae9;
+    --color-tertiary-400: #9FA8DA;
+    --color-tertiary-500: #7986cb;
+}
+
+@layer base {
+    body {
+        @apply bg-navy-900 text-navy-50 min-h-screen font-sans antialiased;
+    }
+}
+
+@layer components {
+    /* Sidebar navigation links */
+    .sidebar-link {
+        @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-navy-400 transition-all duration-200;
+    }
+    .sidebar-link:hover {
+        @apply text-navy-200 bg-navy-800/60;
+    }
+    .sidebar-link.active {
+        @apply text-primary-400 bg-navy-800/80 border-l-2 border-primary-400 font-semibold;
+    }
+    .sidebar-icon {
+        @apply text-base w-5 text-center;
+    }
+
+    /* Stat cards */
+    .stat-card {
+        @apply bg-navy-800/60 rounded-2xl border border-navy-700/50 p-5;
+    }
+
+    /* Chart bars */
+    .chart-bar {
+        @apply flex-1 rounded-t-lg relative flex items-end justify-center;
+        background: linear-gradient(180deg, rgba(63, 81, 181, 0.85) 0%, rgba(92, 107, 192, 0.4) 100%);
+        min-width: 2rem;
+    }
+    .chart-label {
+        @apply text-xs text-navy-500 absolute -bottom-6 font-medium;
+    }
+}
+
