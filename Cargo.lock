@@ -1234,7 +1234,6 @@ dependencies = [
  "cookie",
  "dotenvy",
  "entity",
- "getrandom 0.4.2",
  "governor",
  "http",
  "jsonwebtoken",
