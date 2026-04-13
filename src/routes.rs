@@ -1,6 +1,6 @@
 use crate::app::controllers::feedback_controller::get_feedbacks;
 use crate::app::controllers::login_page::LoginPage;
-use crate::app::pages::admin_forms::{AdminFormBuilder, AdminFormResponses, AdminFormsList};
+use crate::app::pages::admin_forms::{AdminFormBuilder, AdminFormEdit, AdminFormResponses, AdminFormsList};
 use crate::app::pages::public_form::PublicFormView;
 use leptos::prelude::*;
 use leptos_meta::*;
@@ -46,6 +46,7 @@ pub fn App() -> impl IntoView {
                     <Route path=path!("feedbacks") view=FeedbackListPage/>
                     <Route path=path!("forms") view=AdminFormsList/>
                     <Route path=path!("forms/new") view=AdminFormBuilder/>
+                    <Route path=path!("forms/:id/edit") view=AdminFormEdit/>
                     <Route path=path!("forms/:id/responses") view=AdminFormResponses/>
                 </ParentRoute>
             </Routes>

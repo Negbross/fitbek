@@ -144,11 +144,13 @@ impl FormService {
     pub async fn get_form_responses(
         db: &DatabaseConnection,
         user_id: uuid::Uuid,
-        form_id: String,
+        form_id_str: String,
     ) -> Result<Option<Vec<FormResponseDto>>, AppError> {
+        let form_id = uuid::Uuid::parse_str(&form_id_str).map_err(|_| AppError::BadRequest("Invalid form ID".to_string()))?;
+
         // Validate user owns this form
         let form_db = forms::Entity::find()
-            .filter(forms::Column::Id.eq(&form_id))
+            .filter(forms::Column::Id.eq(form_id))
             .one(db).await?;
         if let Some(f) = form_db {
             if f.user_id != user_id {
@@ -164,6 +166,16 @@ impl FormService {
             .all(db)
             .await?;
 
+        let questions_db = entity::generated::form_questions::Entity::find()
+            .filter(entity::generated::form_questions::Column::FormId.eq(form_id))
+            .all(db)
+            .await?;
+
+        let mut question_map = std::collections::HashMap::new();
+        for q in questions_db {
+            question_map.insert(q.id.to_string(), q.label);
+        }
+
         let mut response_dtos = Vec::new();
         for r in responses_db {
             let answers_db = form_answers::Entity::find()
@@ -176,6 +188,7 @@ impl FormService {
                 .map(|a| FormAnswerDto {
                     id: a.id.to_string(),
                     question_id: a.question_id.to_string(),
+                    question_label: question_map.get(&a.question_id.to_string()).cloned(),
                     answer_value: a.answer_value,
                 })
                 .collect();
@@ -195,9 +208,12 @@ impl FormService {
         db: &DatabaseConnection,
         payload: SubmitResponsePayload,
     ) -> Result<(), AppError> {
+        let parsed_form_id = uuid::Uuid::parse_str(&payload.form_id)
+            .map_err(|_| AppError::BadRequest("Invalid form ID format".to_string()))?;
+
         let response = form_responses::ActiveModel {
             id: Set(uuid::Uuid::new_v4()),
-            form_id: Set(payload.form_id.parse().unwrap()),
+            form_id: Set(parsed_form_id),
             submitted_at: Set(Some(chrono::Utc::now().naive_utc())),
             ..Default::default()
         };
@@ -205,10 +221,13 @@ impl FormService {
         let response_res = response.insert(db).await?;
 
         for ans in payload.answers {
+            let parsed_question_id = uuid::Uuid::parse_str(&ans.question_id)
+                .map_err(|_| AppError::BadRequest("Invalid question ID format".to_string()))?;
+
             let answer = form_answers::ActiveModel {
                 id: Set(uuid::Uuid::new_v4()),
                 response_id: Set(response_res.id.clone()),
-                question_id: Set(ans.question_id.parse().unwrap()), // String ID according to migration/entity
+                question_id: Set(parsed_question_id), // String ID according to migration/entity
                 answer_value: Set(ans.answer_value),
                 ..Default::default()
             };
@@ -216,5 +235,54 @@ impl FormService {
         }
 
         Ok(())
+    }
+
+    pub async fn update_form(
+        db: &DatabaseConnection,
+        user_id: uuid::Uuid,
+        payload: crate::app::models::form::UpdateFormPayload,
+    ) -> Result<(), AppError> {
+        let form_id = uuid::Uuid::parse_str(&payload.id)
+            .map_err(|_| AppError::BadRequest("Invalid form ID".to_string()))?;
+
+        let form_db = forms::Entity::find()
+            .filter(forms::Column::Id.eq(form_id))
+            .one(db).await?;
+
+        if let Some(f) = form_db {
+            if f.user_id != user_id {
+                return Err(AppError::Forbidden);
+            }
+            let mut active_form: forms::ActiveModel = f.into();
+            active_form.title = Set(payload.title);
+            active_form.description = Set(payload.description);
+            active_form.update(db).await?;
+            Ok(())
+        } else {
+            Err(AppError::NotFound)
+        }
+    }
+
+    pub async fn delete_form(
+        db: &DatabaseConnection,
+        user_id: uuid::Uuid,
+        form_id_str: String,
+    ) -> Result<(), AppError> {
+        let form_id = uuid::Uuid::parse_str(&form_id_str)
+            .map_err(|_| AppError::BadRequest("Invalid form ID".to_string()))?;
+
+        let form_db = forms::Entity::find()
+            .filter(forms::Column::Id.eq(form_id))
+            .one(db).await?;
+
+        if let Some(f) = form_db {
+            if f.user_id != user_id {
+                return Err(AppError::Forbidden);
+            }
+            f.delete(db).await?;
+            Ok(())
+        } else {
+            Err(AppError::NotFound)
+        }
     }
 }

@@ -43,6 +43,7 @@ pub struct FormResponseDto {
 pub struct FormAnswerDto {
     pub id: String,
     pub question_id: String,
+    pub question_label: Option<String>,
     pub answer_value: Option<String>,
 }
 
@@ -60,6 +61,13 @@ pub struct CreateFormQuestionPayload {
     pub options: Option<String>,
     pub is_required: bool,
     pub order_index: i32,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct UpdateFormPayload {
+    pub id: String,
+    pub title: String,
+    pub description: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
